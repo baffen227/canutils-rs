@@ -1,0 +1,58 @@
+VERSION ""
+
+
+NS_ :
+    NS_DESC_
+    CM_
+    BA_DEF_
+    BA_
+    VAL_
+    CAT_DEF_
+    CAT_
+    FILTER
+    BA_DEF_DEF_
+    EV_DATA_
+    ENVVAR_DATA_
+    SGTYPE_
+    SGTYPE_VAL_
+    BA_DEF_SGTYPE_
+    BA_SGTYPE_
+    SIG_TYPE_REF_
+    VAL_TABLE_
+    SIG_GROUP_
+    SIG_VALTYPE_
+    SIGTYPE_VALTYPE_
+    BO_TX_BU_
+    BA_DEF_REL_
+    BA_REL_
+    BA_DEF_DEF_REL_
+    BU_SG_REL_
+    BU_EV_REL_
+    BU_BO_REL_
+    SG_MUL_VAL_
+
+BS_: 
+BU_: USB2CANA CANABLE 
+BO_ 2 config_spm: 8 USB2CANA
+   SG_ hub_index : 7|4@0+ (1,0) [0|1] "" CANABLE
+   SG_ string_index : 2|3@0+ (1,0) [0|1] "" CANABLE
+   SG_ spm_mode : 9|2@0+ (1,0) [0|1] "" Vector__XXX
+
+BO_ 3 config_ebm: 8 USB2CANA
+   SG_ hub_index : 7|4@0+ (1,0) [0|1] "" Vector__XXX
+   SG_ string_index : 2|3@0+ (1,0) [0|1] "" Vector__XXX
+   SG_ module_index : 13|6@0+ (1,0) [0|1] "" Vector__XXX
+   SG_ ebm_mode : 17|2@0+ (1,0) [0|1] "" Vector__XXX
+
+CM_ BU_ USB2CANA "Waveshare USB-CAN-A";
+CM_ BU_ CANABLE "MKS CANable V2.0 Pro";
+BA_DEF_ BO_ "GenMsgBackgroundColor" STRING ;
+BA_DEF_ BO_ "GenMsgForegroundColor" STRING ;
+BA_DEF_ BO_ "matchingcriteria" INT 0 0;
+BA_DEF_ BO_ "filterlabeling" INT 0 0;
+BA_DEF_DEF_ "GenMsgBackgroundColor" "#ffffff";
+BA_DEF_DEF_ "GenMsgForegroundColor" "#000000";
+BA_DEF_DEF_ "matchingcriteria" 0;
+BA_DEF_DEF_ "filterlabeling" 1;
+VAL_ 2 spm_mode 0 "SPM_Disconnect_Mode" 1 "SPM_Resistor_Mode_(0x1)" 2 "SPM_Resistor_Mode_(0x2)";
+VAL_ 3 ebm_mode 0 "EBM_Disconnect_Mode" 1 "EBM_Enable_Mode" 3 "EBM_Bypass_Mode";
