@@ -174,17 +174,21 @@ fn print_dbc_signals(signal_lookup: &HashMap<u32, (String, Vec<Signal>)>, frame:
             .try_into()
             .expect("slice with incorrect length");
 
-        let signal_value: u64 = if *signal.byte_order() == ByteOrder::LittleEndian {
-            u64::from_le_bytes(frame_data)
-        } else {
-            u64::from_be_bytes(frame_data)
-        };
-
-        // Calculate signal value
         let bit_mask: u64 = 2u64.pow(*signal.signal_size() as u32) - 1;
-        let signal_value = ((signal_value >> signal.start_bit()) & bit_mask) as f32
-            * *signal.factor() as f32
-            + *signal.offset() as f32;
+
+        let signal_value: f32 = if *signal.byte_order() == ByteOrder::LittleEndian {
+            let frame_data_value = u64::from_le_bytes(frame_data);
+            ((frame_data_value >> signal.start_bit()) & bit_mask) as f32 * *signal.factor() as f32
+                + *signal.offset() as f32
+        } else {
+            let frame_data_value = u64::from_be_bytes(frame_data);
+            let sentinel: u64 = (signal.start_bit() / 8) * 8;
+            let bg_sentinel: u64 = 56 - sentinel;
+            let be_start_bit: u64 = bg_sentinel + (signal.start_bit() - sentinel);
+            let be_end_bit: u64 = be_start_bit - signal.signal_size() + 1;
+            ((frame_data_value >> be_end_bit) & bit_mask) as f32 * *signal.factor() as f32
+                + *signal.offset() as f32
+        };
 
         let signal_value_s = format!("{:6.4}", signal_value);
 
