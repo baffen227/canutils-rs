@@ -2,7 +2,7 @@ use ansi_term::Color::{self, Cyan, Fixed, Green, Purple};
 use anyhow::Result;
 use can_dbc::{ByteOrder, Signal};
 use futures::StreamExt;
-use socketcan::CANFrame;
+use socketcan;
 use std::collections::HashMap;
 use std::convert::TryInto;
 use std::fmt::Write;
@@ -10,7 +10,7 @@ use std::path::PathBuf;
 use structopt::StructOpt;
 use tokio::fs::File;
 use tokio::io::AsyncReadExt;
-use tokio_socketcan;
+use tokio_socketcan::CANFrame;
 
 const COLOR_CAN_ID: Color = Color::White;
 const COLOR_CAN_SFF: Color = Color::Blue;
@@ -117,7 +117,7 @@ async fn main() -> Result<()> {
 
         for msg in dbc.messages() {
             signal_lookup.insert(
-                msg.message_id().0 & !socketcan::EFF_FLAG,
+                msg.message_id().raw() & !socketcan::frame::CAN_EFF_FLAG,
                 (msg.message_name().clone(), msg.signals().clone()),
             );
         }
@@ -164,7 +164,7 @@ async fn main() -> Result<()> {
 
 // Given a CAN Frame, lookup the can signals and print the signal values
 fn print_dbc_signals(signal_lookup: &HashMap<u32, (String, Vec<Signal>)>, frame: &CANFrame) {
-    let id = frame.id() & !socketcan::EFF_FLAG;
+    let id = frame.id() & !socketcan::frame::CAN_EFF_FLAG;
     let (message_name, signals) = signal_lookup.get(&id).expect("Unknown message id");
     println!("\n{}", Purple.paint(message_name));
 

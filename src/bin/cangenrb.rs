@@ -149,7 +149,7 @@ impl CanFrameGenStrategy for DBCSignalRangeGen {
         };
 
         let rand_frame_data = if *message.message_size() > 8 {
-            println!("Non random message body due to currently unsupported size `{}` - id: `{:x}`. Size {} > 8", message.message_name(), message.message_id().0, message.message_size());
+            println!("Non random message body due to currently unsupported size `{}` - id: `{:x}`. Size {} > 8", message.message_name(), message.message_id().raw(), message.message_size());
             [0; 8]
         } else {
             self.gen_msg_frame_data(&message)
@@ -162,7 +162,7 @@ impl CanFrameGenStrategy for DBCSignalRangeGen {
             rand_frame_data.to_vec().hex_dump()
         );
 
-        let message_id = message.message_id().0 & socketcan::EFF_MASK;
+        let message_id = message.message_id().raw() & socketcan::frame::CAN_EFF_MASK;
 
         CANFrame::new(message_id, &rand_frame_data, rtr_rand, err_rand)
             .expect("Failed to create frame")
@@ -254,7 +254,7 @@ impl CanFrameGenStrategy for RandomFrameDataGen {
             rand_frame_data.to_vec().hex_dump()
         );
 
-        let message_id = message.message_id().0 & socketcan::EFF_MASK;
+        let message_id = message.message_id().raw() & socketcan::frame::CAN_EFF_MASK;
         CANFrame::new(message_id, &rand_frame_data, rtr_rand, err_rand)
             .expect("Failed to create frame")
     }
