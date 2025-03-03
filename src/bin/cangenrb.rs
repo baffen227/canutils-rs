@@ -2,7 +2,7 @@ use ansi_term::{
     Color::Red,
     Colour::{Blue, Cyan, Green, Purple},
 };
-use can_dbc::{self, Message};
+use can_dbc::{self, ByteOrder, Message};
 use pretty_hex::*;
 use rand::Rng;
 use socketcan::{tokio::CanSocket, CanDataFrame, CanFrame, EmbeddedFrame};
@@ -130,7 +130,8 @@ struct DBCSignalRangeGen {
 impl CanFrameGenStrategy for DBCSignalRangeGen {
     fn gen(&self) -> CanFrame {
         let mut rng = rand::thread_rng();
-        let message_idx: usize = rng.gen_range(0, self.dbc_messages.len() - 1);
+        //let message_idx: usize = rng.gen_range(0, self.dbc_messages.len() - 1);
+        let message_idx: usize = 1;
         let message = self.dbc_messages.get(message_idx).unwrap();
 
         println!("\n{}", Purple.paint(message.message_name()));
@@ -177,19 +178,19 @@ impl DBCSignalRangeGen {
         let mut rng = rand::thread_rng();
 
         for signal in message.signals() {
-            let actual_value: f64 = if signal.min() == signal.max() {
+            let actual_value: u8 = if signal.min() == signal.max() {
                 println!(
                     "Min and max value `{} = {}` match for signal {}, can not create random value.",
                     signal.min(),
                     signal.max(),
                     signal.name()
                 );
-                *signal.min()
+                *signal.min() as u8
             } else {
-                rng.gen_range(signal.min(), signal.max())
+                rng.gen_range(signal.min(), signal.max()) as u8
             };
 
-            let random_signal_value = (actual_value - signal.offset) / signal.factor;
+            let random_signal_value = (actual_value - signal.offset as u8) / signal.factor as u8;
             let bit_mask: u64 = 2u64.pow(*signal.signal_size() as u32) - 1;
 
             let min_s = format!("{}", signal.min());
@@ -205,17 +206,35 @@ impl DBCSignalRangeGen {
                 Cyan.paint(actual_value_s),
             );
 
-            assert!(actual_value >= *signal.min());
-            assert!(actual_value <= *signal.max());
+            assert!(actual_value >= *signal.min() as u8);
+            assert!(actual_value <= *signal.max() as u8);
 
             // NOTE: only consider little endian ? what about big endian ?
-            let shifted_signal_value =
-                (random_signal_value as u64 & bit_mask) << (signal.start_bit as u8);
+            if *signal.byte_order() == ByteOrder::LittleEndian {
+                let shifted_signal_value =
+                    (random_signal_value as u64 & bit_mask) << (signal.start_bit as u8);
 
-            frame_data_rand |= shifted_signal_value;
+                frame_data_rand |= shifted_signal_value;
+            } else {
+                // take care the big endian transformation
+                // sentinel could be 0, 8, 16, 24, 32, 40, 48, or 56.
+                let sentinel: u64 = (signal.start_bit() / 8) * 8;
+                // be_sentinel is the corresponding mapping to [63..0].
+                let be_sentinel: u64 = 56 - sentinel;
+                // be_start_bit is be_sentinel plus offset
+                let be_start_bit: u64 = be_sentinel + (signal.start_bit() - sentinel);
+                let be_end_bit: u64 = be_start_bit - signal.signal_size() + 1;
+
+                let shifted_signal_value =
+                    (random_signal_value as u64 & bit_mask) << (be_end_bit as u8);
+
+                frame_data_rand |= shifted_signal_value;
+            }
         }
 
-        frame_data_rand.to_le_bytes()
+        // TODO: how to tell little endian or big endian here ?
+        //frame_data_rand.to_le_bytes()
+        frame_data_rand.to_be_bytes()
     }
 }
 
