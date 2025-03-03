@@ -2,7 +2,7 @@ use ansi_term::Color::{self, Cyan, Fixed, Green, Purple};
 use anyhow::Result;
 use can_dbc::{ByteOrder, Signal};
 use futures::StreamExt;
-use socketcan::{EmbeddedFrame, Frame};
+use socketcan::{tokio::CanSocket, EmbeddedFrame, Frame};
 use std::collections::HashMap;
 use std::convert::TryInto;
 use std::fmt::Write;
@@ -96,7 +96,7 @@ struct Opt {
 async fn main() -> Result<()> {
     let opt = Opt::from_args();
 
-    let mut socket_rx = socketcan::tokio::CanSocket::open(&opt.can_interface).unwrap();
+    let mut socket_rx = CanSocket::open(&opt.can_interface).unwrap();
 
     let byte_hex_table: Vec<String> = (0u8..=u8::max_value())
         .map(|i| {
