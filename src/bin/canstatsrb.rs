@@ -1,9 +1,8 @@
 use core::fmt::Display;
 use futures::StreamExt;
+use socketcan::{tokio::CanSocket, EmbeddedFrame, Frame};
 use std::{collections::HashMap, fmt};
 use structopt::StructOpt;
-use tokio_socketcan;
-
 #[derive(Debug, StructOpt)]
 #[structopt(name = "canstatsrb", about = "SocketCAN message statistics")]
 struct Opt {
@@ -50,7 +49,7 @@ impl Display for Stats {
 async fn main() -> std::io::Result<()> {
     let opt = Opt::from_args();
 
-    let mut socket_rx = tokio_socketcan::CANSocket::open(&opt.can_interface).unwrap();
+    let mut socket_rx = CanSocket::open(&opt.can_interface).unwrap();
 
     let mut stats: Stats = Default::default();
 
@@ -62,28 +61,28 @@ async fn main() -> std::io::Result<()> {
                 if frame.is_extended() {
                     stats.sff_frames_total += 1;
 
-                    if frame.is_error() {
+                    if frame.is_error_frame() {
                         stats.sff_frames_err += 1;
                     }
 
-                    if frame.is_rtr() {
+                    if frame.is_remote_frame() {
                         stats.sff_frames_rtr += 1;
                     }
                 } else {
                     stats.eff_frames_total += 1;
 
-                    if frame.is_error() {
+                    if frame.is_error_frame() {
                         stats.eff_frames_err += 1;
                     }
 
-                    if frame.is_rtr() {
+                    if frame.is_remote_frame() {
                         stats.eff_frames_rtr += 1;
                     }
                 }
 
                 stats
                     .msg_ids
-                    .entry(frame.id())
+                    .entry(frame.raw_id())
                     .and_modify(|e| *e += 1)
                     .or_insert(1);
 
