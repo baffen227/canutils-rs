@@ -177,6 +177,8 @@ impl DBCSignalRangeGen {
 
         let mut rng = rand::thread_rng();
 
+        let mut frame_data_byte_order: ByteOrder = ByteOrder::LittleEndian;
+
         for signal in message.signals() {
             let actual_value: u8 = if signal.min() == signal.max() {
                 println!(
@@ -209,8 +211,8 @@ impl DBCSignalRangeGen {
             assert!(actual_value >= *signal.min() as u8);
             assert!(actual_value <= *signal.max() as u8);
 
-            // NOTE: only consider little endian ? what about big endian ?
-            if *signal.byte_order() == ByteOrder::LittleEndian {
+            frame_data_byte_order = *signal.byte_order();
+            if frame_data_byte_order == ByteOrder::LittleEndian {
                 let shifted_signal_value =
                     (random_signal_value as u64 & bit_mask) << (signal.start_bit as u8);
 
@@ -232,9 +234,11 @@ impl DBCSignalRangeGen {
             }
         }
 
-        // TODO: how to tell little endian or big endian here ?
-        //frame_data_rand.to_le_bytes()
-        frame_data_rand.to_be_bytes()
+        if frame_data_byte_order == ByteOrder::LittleEndian {
+            frame_data_rand.to_le_bytes()
+        } else {
+            frame_data_rand.to_be_bytes()
+        }
     }
 }
 
