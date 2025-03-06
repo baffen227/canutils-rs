@@ -47,7 +47,6 @@ BO_ 3 config_ebm: 8 USB2CANA
 BO_ 4 test_multiplexing: 8 USB2CANA
    SG_ sample_multiplexor_0 M : 0|2@1+ (1,0) [0|3] "" Vector__XXX
    SG_ sample_multiplexed_0 m0 : 8|8@1+ (1,0) [0|15] "" Vector__XXX
-   SG_ sample_multiplexor_2 M : 0|2@1+ (1,0) [0|3] "" Vector__XXX
    SG_ sample_multiplexed_1 m1 : 8|8@1+ (1,0) [0|15] "" Vector__XXX
 
 CM_ BU_ USB2CANA "Waveshare USB-CAN-A";
@@ -55,6 +54,8 @@ CM_ BU_ CANABLE "MKS CANable V2.0 Pro";
 CM_ BO_ 4 "verify DBC multiplexing";
 BA_DEF_ BO_ "GenMsgBackgroundColor" STRING ;
 BA_DEF_ BO_ "GenMsgForegroundColor" STRING ;
+BA_DEF_ BO_ "matchingcriteria" INT 0 0;
+BA_DEF_ BO_ "filterlabeling" INT 0 0;
 BA_DEF_ BO_ "matchingcriteria" INT 0 0;
 BA_DEF_ BO_ "filterlabeling" INT 0 0;
 BA_DEF_ BO_ "matchingcriteria" INT 0 0;
@@ -73,5 +74,4 @@ VAL_ 2 spm_mode 0 "SPM_Disconnect_Mode" 1 "SPM_Resistor_Mode_(0x1)" 2 "SPM_Resis
 VAL_ 3 ebm_mode 0 "EBM_Disconnect_Mode" 1 "EBM_Enable_Mode" 3 "EBM_Bypass_Mode";
 VAL_ 4 sample_multiplexor_0 0 "the_first_multiplexed_signal_value" 1 "the_second_multiplexed_signal_value" 2 "the_third_multiplexed_signal_value" 3 "the_fourth_multplexed_signal_value";
 VAL_ 4 sample_multiplexed_0 0 "the_first_multiplexed_signal_value" 1 "the_second_multiplexed_signal_value" 2 "the_third_multiplexed_signal_value" 3 "the_fourth_multiplexed_signal_value";
-VAL_ 4 sample_multiplexor_2 0 "the_first_multiplexed_signal_value" 1 "the_second_multiplexed_signal_value" 2 "the_third_multiplexed_signal_value" 3 "the_fourth_multplexed_signal_value";
 VAL_ 4 sample_multiplexed_1 0 "the_first_multiplexed_signal_value" 1 "the_second_multiplexed_signal_value" 2 "the_third_multiplexed_signal_value" 3 "the_fourth_multiplexed_signal_value";
