@@ -1,6 +1,6 @@
 use ansi_term::Color::{self, Cyan, Fixed, Green, Purple};
 use anyhow::Result;
-use can_dbc::{ByteOrder, Signal};
+use can_dbc::{ByteOrder, MultiplexIndicator, Signal};
 use futures::StreamExt;
 use socketcan::{tokio::CanSocket, EmbeddedFrame, Frame};
 use std::collections::HashMap;
@@ -112,6 +112,21 @@ async fn main() -> Result<()> {
         f.read_to_end(&mut buffer).await?;
         let dbc = can_dbc::DBC::from_slice(&buffer).expect("Failed to parse DBC");
 
+        // Harry check
+        /*
+        println!("Harry check extended_multiplex");
+        println!("count: {}", dbc.extended_multiplex().iter().count());
+
+        println!("Harry check message_multiplexor_switch");
+        let multiplexor_switch = dbc.message_multiplexor_switch(MessageId::Extended(34));
+        assert!(multiplexor_switch.is_ok());
+        assert!(multiplexor_switch.as_ref().unwrap().is_some());
+        assert_eq!(
+            multiplexor_switch.unwrap().unwrap().name(),
+            "IMD_Request_Mux"
+        );
+        */
+
         let mut signal_lookup = HashMap::new();
 
         for msg in dbc.messages() {
@@ -170,6 +185,9 @@ fn print_dbc_signals(
     let (message_name, signals) = signal_lookup.get(&id).expect("Unknown message id");
     println!("\n{}", Purple.paint(message_name));
 
+    let mut multiplexor_value: u64 = 0;
+
+    // ONGOING: support signal multiplexing
     for signal in signals.iter() {
         let frame_data: [u8; 8] = frame
             .data()
@@ -199,13 +217,42 @@ fn print_dbc_signals(
             (((message_value >> be_end_bit) & bit_mask) as f32) * (*signal.factor() as f32)
                 + (*signal.offset() as f32)
         };
+        let signal_value_s = format!("{:#x}", signal_value as u64);
 
-        let signal_value_s = format!("{:6.4}", signal_value);
-
-        println!(
-            "{} → value {}",
-            Green.paint(signal.name()),
-            Cyan.paint(signal_value_s)
-        );
+        match *signal.multiplexer_indicator() {
+            MultiplexIndicator::Multiplexor => {
+                multiplexor_value = signal_value as u64;
+                println!(
+                    "Multiplexor {} → value {}",
+                    Green.paint(signal.name()),
+                    Cyan.paint(signal_value_s)
+                );
+            }
+            MultiplexIndicator::MultiplexedSignal(multiplex_value) => {
+                if multiplex_value == multiplexor_value {
+                    println!(
+                        "MultiplexedSignal {}, multiplex_value {:#x} → value {}",
+                        Green.paint(signal.name()),
+                        multiplex_value,
+                        Cyan.paint(signal_value_s)
+                    );
+                }
+            }
+            MultiplexIndicator::MultiplexorAndMultiplexedSignal(multiplex_value) => {
+                println!(
+                    "MultiplexorAndMultiplexedSignal {}, multiplex_value {:#x} → value {}",
+                    Green.paint(signal.name()),
+                    multiplex_value,
+                    Cyan.paint(signal_value_s)
+                );
+            }
+            MultiplexIndicator::Plain => {
+                println!(
+                    "Plain {} → value {}",
+                    Green.paint(signal.name()),
+                    Cyan.paint(signal_value_s)
+                );
+            }
+        }
     }
 }
